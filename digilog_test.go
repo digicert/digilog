@@ -27,7 +27,7 @@ func TestDebug(t *testing.T) {
 func TestInfo(t *testing.T) {
 	assert := assert.New(t)
 
-	LogLevel = "DEBUG"
+	LogLevel = "INFO"
 	Info("salutation='%s'", "hello mother")
 	assert.True(strings.Contains(testBuff.String(), "INFO"))
 	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello mother'\n"))
@@ -36,7 +36,7 @@ func TestInfo(t *testing.T) {
 func TestWarn(t *testing.T) {
 	assert := assert.New(t)
 
-	LogLevel = "DEBUG"
+	LogLevel = "WARN"
 	Warn("salutation='%s'", "hello father")
 	assert.True(strings.Contains(testBuff.String(), "WARN"))
 	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello father'\n"))
@@ -45,21 +45,21 @@ func TestWarn(t *testing.T) {
 func TestError(t *testing.T) {
 	assert := assert.New(t)
 
-	LogLevel = "DEBUG"
+	LogLevel = "ERROR"
 	Error("salutation='%s'", "hello sister")
 	assert.True(strings.Contains(testBuff.String(), "ERROR"))
 	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello sister'\n"))
 }
 
-// Can't test Critical ATM since it causes the test to exit
-// func TestCritical(t *testing.T) {
-// 	assert := assert.New(t)
+// Can't test Critical func ATM since it causes the test to exit, this simulates the Critical log portion
+func TestCritical(t *testing.T) {
+	assert := assert.New(t)
 
-// LogLevel = "DEBUG"
-// 	Critical("salutation='%s'", "hello brother")
-// 	assert.True(strings.Contains(testBuff.String(), "CRITICAL"))
-// 	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello brother'\n"))
-// }
+	LogLevel = "CRITICAL"
+	log("CRITICAL", "file", 0, "salutation='%s'", "hello brother")
+	assert.True(strings.Contains(testBuff.String(), "CRITICAL"))
+	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello brother'\n"))
+}
 
 func TestLogLevel(t *testing.T) {
 	assert := assert.New(t)

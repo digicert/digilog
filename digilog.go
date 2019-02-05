@@ -77,6 +77,8 @@ func Critical(message string, args ...interface{}) {
 		line = 0
 	}
 	log("CRITICAL", file, line, message, args...)
+
+	os.Exit(1)
 }
 
 // Log lame Log function
@@ -92,9 +94,5 @@ func log(loglevel string, file string, line int, message string, args ...interfa
 	if LogLevelVal[loglevel] <= LogLevelVal[LogLevel] {
 		time := time.Now().Format(time.RFC3339)
 		fmt.Fprintf(Out.Out, "%s file=%s line=%d %s: %s\n", time, file, line, loglevel, fmt.Sprintf(message, args...))
-	}
-
-	if LogLevelVal[loglevel] == 0 {
-		os.Exit(1)
 	}
 }
