@@ -2,6 +2,7 @@ package digilog
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"time"
@@ -10,11 +11,22 @@ import (
 // LogLevel sets the log level to log
 var LogLevel string
 
+// Out prints the data to os.Stdout/os.StdErr
+var Out *BuffOut
+
+// BuffOut provides writers to handle output and err output
+type BuffOut struct {
+	Out io.Writer
+	Err io.Writer
+}
+
 func init() {
 	LogLevel = os.Getenv("LOG_LEVEL")
 	if LogLevel == "" {
 		LogLevel = "DEBUG"
 	}
+
+	Out = &BuffOut{Out: os.Stdout, Err: os.Stderr}
 }
 
 // Debug shortcut for log function
@@ -79,7 +91,7 @@ func log(loglevel string, file string, line int, message string, args ...interfa
 
 	if LogLevelVal[loglevel] <= LogLevelVal[LogLevel] {
 		time := time.Now().Format(time.RFC3339)
-		fmt.Printf("%s file=%s line=%d %s: %s\n", time, file, line, loglevel, fmt.Sprintf(message, args...))
+		fmt.Fprintf(Out.Out, "%s file=%s line=%d %s: %s\n", time, file, line, loglevel, fmt.Sprintf(message, args...))
 	}
 
 	if LogLevelVal[loglevel] == 0 {
