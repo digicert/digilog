@@ -11,6 +11,9 @@ import (
 // LogLevel sets the log level to log
 var LogLevel string
 
+// CriticalExit makes Critical func exit on calling
+var CriticalExit bool
+
 // Out prints the data to os.Stdout/os.StdErr
 var Out *BuffOut
 
@@ -26,59 +29,46 @@ func init() {
 		LogLevel = "DEBUG"
 	}
 
+	CriticalExit = true
+
 	Out = &BuffOut{Out: os.Stdout, Err: os.Stderr}
 }
 
 // Debug shortcut for log function
 func Debug(message string, args ...interface{}) {
-	_, file, line, ok := runtime.Caller(1)
-	if !ok {
-		file = ""
-		line = 0
-	}
+	_, file, line, _ := runtime.Caller(1)
 	log("DEBUG", file, line, message, args...)
 }
 
 // Info shortcut for log function
 func Info(message string, args ...interface{}) {
-	_, file, line, ok := runtime.Caller(1)
-	if !ok {
-		file = ""
-		line = 0
-	}
+	_, file, line, _ := runtime.Caller(1)
 	log("INFO", file, line, message, args...)
 }
 
 // Warn shortcut for log function
 func Warn(message string, args ...interface{}) {
-	_, file, line, ok := runtime.Caller(1)
-	if !ok {
-		file = ""
-		line = 0
-	}
+	_, file, line, _ := runtime.Caller(1)
 	log("WARN", file, line, message, args...)
 }
 
 // Error shortcut for log function
 func Error(message string, args ...interface{}) {
-	_, file, line, ok := runtime.Caller(1)
-	if !ok {
-		file = ""
-		line = 0
-	}
+	_, file, line, _ := runtime.Caller(1)
 	log("ERROR", file, line, message, args...)
 }
 
 // Critical shortcut for log function
-func Critical(message string, args ...interface{}) {
-	_, file, line, ok := runtime.Caller(1)
-	if !ok {
-		file = ""
-		line = 0
-	}
-	log("CRITICAL", file, line, message, args...)
+func Critical(args ...interface{}) {
+	_, file, line, _ := runtime.Caller(1)
 
-	os.Exit(1)
+	message := fmt.Sprint(args...)
+	log("CRITICAL", file, line, message)
+
+	// Hokey way to test the critical path
+	if CriticalExit {
+		os.Exit(1)
+	}
 }
 
 // Log lame Log function

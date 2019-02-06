@@ -2,6 +2,7 @@ package digilog
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -12,6 +13,7 @@ var testBuff *bytes.Buffer
 
 func init() {
 	testBuff = &bytes.Buffer{}
+	CriticalExit = false
 	Out = &BuffOut{Out: testBuff, Err: testBuff}
 }
 
@@ -51,12 +53,11 @@ func TestError(t *testing.T) {
 	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello sister'\n"))
 }
 
-// Can't test Critical func ATM since it causes the test to exit, this simulates the Critical log portion
 func TestCritical(t *testing.T) {
 	assert := assert.New(t)
 
 	LogLevel = "CRITICAL"
-	log("CRITICAL", "file", 0, "salutation='%s'", "hello brother")
+	Critical("CRITICAL", fmt.Errorf("salutation='%s'", "hello brother"))
 	assert.True(strings.Contains(testBuff.String(), "CRITICAL"))
 	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello brother'\n"))
 }
