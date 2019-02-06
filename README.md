@@ -34,5 +34,7 @@ OR:
 ## Version History
 
 1.2.0: Standardized funcs to mimic go's standard. If using Sprintf formatting, use the `f` suffixed method (Debugf, Infof, etc). Otherwise use the old methods
+
 1.1.0: Updated `Critical` to behave like `log.Panic` accepting an err object instead of a string.
+
 1.0.0: Initial release.
