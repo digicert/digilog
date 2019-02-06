@@ -11,7 +11,7 @@ import (
 // LogLevel sets the log level to log
 var LogLevel string
 
-// CriticalExit makes Critical func exit on calling
+// CriticalExit makes Critical funcs exit when calling
 var CriticalExit bool
 
 // Out prints the data to os.Stdout/os.StdErr
@@ -35,35 +35,58 @@ func init() {
 }
 
 // Debug shortcut for log function
-func Debug(message string, args ...interface{}) {
-	_, file, line, _ := runtime.Caller(1)
-	log("DEBUG", file, line, message, args...)
+func Debug(args ...interface{}) {
+	message := fmt.Sprint(args...)
+	Debugf(message)
+}
+
+// Debugf shortcut for log function
+func Debugf(message string, args ...interface{}) {
+	logIt("DEBUG", message, args...)
 }
 
 // Info shortcut for log function
-func Info(message string, args ...interface{}) {
-	_, file, line, _ := runtime.Caller(1)
-	log("INFO", file, line, message, args...)
+func Info(args ...interface{}) {
+	message := fmt.Sprint(args...)
+	Infof(message)
+}
+
+// Infof shortcut for log function
+func Infof(message string, args ...interface{}) {
+	logIt("INFO", message, args...)
 }
 
 // Warn shortcut for log function
-func Warn(message string, args ...interface{}) {
-	_, file, line, _ := runtime.Caller(1)
-	log("WARN", file, line, message, args...)
+func Warn(args ...interface{}) {
+	message := fmt.Sprint(args...)
+	Warnf(message)
+}
+
+// Warnf shortcut for log function
+func Warnf(message string, args ...interface{}) {
+	logIt("WARN", message, args...)
 }
 
 // Error shortcut for log function
-func Error(message string, args ...interface{}) {
-	_, file, line, _ := runtime.Caller(1)
-	log("ERROR", file, line, message, args...)
+func Error(args ...interface{}) {
+	message := fmt.Sprint(args...)
+	Errorf(message)
+}
+
+// Errorf shortcut for log function
+func Errorf(message string, args ...interface{}) {
+	logIt("ERROR", message, args...)
 }
 
 // Critical shortcut for log function
 func Critical(args ...interface{}) {
-	_, file, line, _ := runtime.Caller(1)
-
 	message := fmt.Sprint(args...)
-	log("CRITICAL", file, line, message)
+	Criticalf(message)
+}
+
+// Criticalf shortcut for log function
+func Criticalf(message string, args ...interface{}) {
+	logIt("CRITICAL", message, args...)
 
 	// Hokey way to test the critical path
 	if CriticalExit {
@@ -71,8 +94,8 @@ func Critical(args ...interface{}) {
 	}
 }
 
-// Log lame Log function
-func log(loglevel string, file string, line int, message string, args ...interface{}) {
+// lame logger
+func logIt(loglevel string, message string, args ...interface{}) {
 	LogLevelVal := map[string]int{
 		"DEBUG":    4,
 		"INFO":     3,
@@ -81,8 +104,14 @@ func log(loglevel string, file string, line int, message string, args ...interfa
 		"CRITICAL": 0,
 	}
 
+	_, file, line, _ := runtime.Caller(2)
+
+	if len(args) > 0 {
+		message = fmt.Sprintf(message, args...)
+	}
+
 	if LogLevelVal[loglevel] <= LogLevelVal[LogLevel] {
 		time := time.Now().Format(time.RFC3339)
-		fmt.Fprintf(Out.Out, "%s file=%s line=%d %s: %s\n", time, file, line, loglevel, fmt.Sprintf(message, args...))
+		fmt.Fprintf(Out.Out, "%s file=%s line=%d %s: %s\n", time, file, line, loglevel, message)
 	}
 }

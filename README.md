@@ -8,7 +8,7 @@ Small wrapper around the built in Go "fmt" class to add logging levels.
 
 ### go.mod
 ```
-require github.com/digicert/digilog v1.0
+require github.com/digicert/digilog v1.2.0 (<= whatever version here)
 ```
 
 ### go src
@@ -24,4 +24,15 @@ Setting the environment variable `LOG_LEVEL` will determine what level is actual
 
 In the code, log levels can be used thusly:
 
-`digilog.Warn("event_id=%s msg='%s'", "some_warning_condition", "Got a warning.")`
+`digilog.Warnf("event_id=%s msg='%s'", "some_warning_condition", "Got a warning.")`
+
+OR:
+
+`digilog.Critical(err)`
+
+
+## Version History
+
+1.2.0: Standardized funcs to mimic go's standard. If using Sprintf formatting, use the `f` suffixed method (Debugf, Infof, etc). Otherwise use the old methods
+1.1.0: Updated `Critical` to behave like `log.Panic` accepting an err object instead of a string.
+1.0.0: Initial release.
