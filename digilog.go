@@ -1,10 +1,13 @@
 package digilog
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -34,58 +37,89 @@ func init() {
 	Out = &BuffOut{Out: os.Stdout, Err: os.Stderr}
 }
 
+// New is used to initialize a new Log
+func New() *Log {
+
+	return &Log{
+		meta: make(map[string]interface{}),
+	}
+}
+
+// Log contains loggers for info and error logging as well as the data to be printed in said logs
+type Log struct {
+	meta map[string]interface{}
+}
+
+// AddTag adds metadata to a Log
+func (l *Log) AddTag(key string, v interface{}) {
+	l.meta[key] = v
+}
+
+// AddDuration adds time.Duration to the log metadata
+func (l *Log) AddDuration(start time.Time) {
+	l.AddTag("duration", fmt.Sprintf("%s", time.Since(start)))
+}
+
 // Debug shortcut for log function
-func Debug(args ...interface{}) {
-	message := fmt.Sprint(args...)
-	Debugf(message)
+func (l *Log) Debug(event string) {
+	l.Debugf(event)
 }
 
 // Debugf shortcut for log function
-func Debugf(message string, args ...interface{}) {
-	logIt("DEBUG", message, args...)
+func (l *Log) Debugf(message string, args ...interface{}) {
+	message = fmt.Sprintf(message, args...)
+	l.prepareLog(message)
+	logWriter("DEBUG", message)
+	l.meta = make(map[string]interface{})
 }
 
 // Info shortcut for log function
-func Info(args ...interface{}) {
-	message := fmt.Sprint(args...)
-	Infof(message)
+func (l *Log) Info() {
+	message := fmt.Sprint()
+	l.Infof(message)
 }
 
 // Infof shortcut for log function
-func Infof(message string, args ...interface{}) {
+func (l *Log) Infof(message string, args ...interface{}) {
 	logIt("INFO", message, args...)
 }
 
 // Warn shortcut for log function
-func Warn(args ...interface{}) {
+func (l *Log) Warn(args ...interface{}) {
 	message := fmt.Sprint(args...)
-	Warnf(message)
+	l.Warnf(message)
 }
 
 // Warnf shortcut for log function
-func Warnf(message string, args ...interface{}) {
+func (l *Log) Warnf(message string, args ...interface{}) {
 	logIt("WARN", message, args...)
 }
 
 // Error shortcut for log function
-func Error(args ...interface{}) {
+func (l *Log) Error(args ...interface{}) {
 	message := fmt.Sprint(args...)
-	Errorf(message)
+	l.Errorf(message)
 }
 
 // Errorf shortcut for log function
-func Errorf(message string, args ...interface{}) {
+func (l *Log) Errorf(message string, args ...interface{}) {
 	logIt("ERROR", message, args...)
 }
 
+// Fatal is equivalent to calling Error(), then os.Exit(1)
+func (l *Log) Fatal(event string, err error) {
+	l.Error(event, err)
+	os.Exit(1)
+}
+
 // Critical shortcut for log function
-func Critical(args ...interface{}) {
+func (l *Log) Critical(args ...interface{}) {
 	message := fmt.Sprint(args...)
-	Criticalf(message)
+	l.Criticalf(message)
 }
 
 // Criticalf shortcut for log function
-func Criticalf(message string, args ...interface{}) {
+func (l *Log) Criticalf(message string, args ...interface{}) {
 	logIt("CRITICAL", message, args...)
 
 	// Hokey way to test the critical path
@@ -94,8 +128,24 @@ func Criticalf(message string, args ...interface{}) {
 	}
 }
 
-// lame logger
-func logIt(loglevel string, message string, args ...interface{}) {
+func (l *Log) prepareLog(event string) string {
+	logStr := fmt.Sprintf("event_id=%s ", event)
+
+	callStr, err := getCaller()
+	if err != nil {
+		fmt.Printf("error getting caller information", err)
+		callStr = 
+	}
+
+	for key, val := range l.meta {
+		strVal := fmt.Sprintf("%v", val)
+		strVal = strings.ReplaceAll(strVal, `"`, "\\\"") // escape double quotes inside strings
+		logStr += fmt.Sprintf("%s=\"%s\" ", key, strVal)
+	}
+	return logStr
+}
+
+func logWriter(loglevel, message string) {
 	LogLevelVal := map[string]int{
 		"DEBUG":    4,
 		"INFO":     3,
@@ -104,14 +154,31 @@ func logIt(loglevel string, message string, args ...interface{}) {
 		"CRITICAL": 0,
 	}
 
-	_, file, line, _ := runtime.Caller(2)
-
-	if len(args) > 0 {
-		message = fmt.Sprintf(message, args...)
-	}
-
 	if LogLevelVal[loglevel] <= LogLevelVal[LogLevel] {
 		time := time.Now().Format(time.RFC3339)
-		fmt.Fprintf(Out.Out, "%s file=%s line=%d %s: %s\n", time, file, line, loglevel, message)
+		fmt.Fprintf(Out.Out, "%s [%s] %s\n", time, loglevel, message)
 	}
+}
+
+func getCaller() (*string, error) {
+	var callStr string
+	pc := make([]uintptr, 4)
+	numCallers := runtime.Callers(1, pc)
+	if numCallers > 0 {
+		pc = pc[:numCallers]
+		frames := runtime.CallersFrames(pc)
+		for {
+			frame, more := frames.Next()
+			if !more {
+				return nil, errors.New("digilog: no caller found outside of digilog")
+			}
+			if !strings.Contains(frame.File, "digilog.go") {
+				_, fname := path.Split(frame.File)
+				callStr = fmt.Sprintf("%s:%d", fname, frame.Line)
+				return &callStr, nil
+			}
+		}
+	}
+
+	return nil, errors.New("digilog: caller not found")
 }

@@ -21,7 +21,8 @@ func TestDebug(t *testing.T) {
 	assert := assert.New(t)
 
 	LogLevel = "DEBUG"
-	Debug("salutation='", "hello world", "'")
+	l := New()
+	l.Debug("salutation='", "hello world", "'")
 	assert.True(strings.Contains(testBuff.String(), "DEBUG"))
 	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello world'\n"))
 }
@@ -29,7 +30,8 @@ func TestDebugf(t *testing.T) {
 	assert := assert.New(t)
 
 	LogLevel = "DEBUG"
-	Debugf("salutation='%s'", "hello world")
+	l := New()
+	l.Debugf("salutation='%s'", "hello world")
 	assert.True(strings.Contains(testBuff.String(), "DEBUG"))
 	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello world'\n"))
 }
@@ -38,7 +40,8 @@ func TestInfo(t *testing.T) {
 	assert := assert.New(t)
 
 	LogLevel = "INFO"
-	Info("salutation='", "hello mother", "'")
+	l := New()
+	l.Info("salutation='", "hello mother", "'")
 	assert.True(strings.Contains(testBuff.String(), "INFO"))
 	assert.True(strings.HasSuffix(testBuff.String(), "salutation='hello mother'\n"))
 }
