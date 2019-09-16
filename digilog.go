@@ -61,66 +61,64 @@ func (l *Log) AddDuration(start time.Time) {
 }
 
 // Debug shortcut for log function
-func (l *Log) Debug(event string) {
-	l.Debugf(event)
+func (l *Log) Debug(event string, args ...interface{}) {
+	message := fmt.Sprint(args...)
+	l.Debugf(event, message)
 }
 
 // Debugf shortcut for log function
-func (l *Log) Debugf(message string, args ...interface{}) {
-	message = fmt.Sprintf(message, args...)
-	l.prepareLog(message)
-	logWriter("DEBUG", message)
-	l.meta = make(map[string]interface{})
+func (l *Log) Debugf(event string, args ...interface{}) {
+	logWriter("DEBUG", l.prepareLog(event, args...))
 }
 
 // Info shortcut for log function
-func (l *Log) Info() {
-	message := fmt.Sprint()
-	l.Infof(message)
+func (l *Log) Info(event string, args ...interface{}) {
+	message := fmt.Sprint(args...)
+	l.Infof(event, message)
 }
 
 // Infof shortcut for log function
-func (l *Log) Infof(message string, args ...interface{}) {
-	logIt("INFO", message, args...)
+func (l *Log) Infof(event string, args ...interface{}) {
+	logWriter("INFO", l.prepareLog(event, args...))
 }
 
 // Warn shortcut for log function
-func (l *Log) Warn(args ...interface{}) {
+func (l *Log) Warn(event string, args ...interface{}) {
 	message := fmt.Sprint(args...)
-	l.Warnf(message)
+	l.Warnf(event, message)
 }
 
 // Warnf shortcut for log function
-func (l *Log) Warnf(message string, args ...interface{}) {
-	logIt("WARN", message, args...)
+func (l *Log) Warnf(event string, args ...interface{}) {
+	logWriter("WARN", l.prepareLog(event, args...))
 }
 
 // Error shortcut for log function
-func (l *Log) Error(args ...interface{}) {
+func (l *Log) Error(event string, args ...interface{}) {
 	message := fmt.Sprint(args...)
-	l.Errorf(message)
+	l.Errorf(event, message)
 }
 
 // Errorf shortcut for log function
-func (l *Log) Errorf(message string, args ...interface{}) {
-	logIt("ERROR", message, args...)
+func (l *Log) Errorf(event string, args ...interface{}) {
+	logWriter("ERROR", l.prepareLog(event, args...))
 }
 
 // Fatal is equivalent to calling Error(), then os.Exit(1)
-func (l *Log) Fatal(event string, err error) {
-	l.Error(event, err)
+func (l *Log) Fatal(event string, args ...interface{}) {
+	l.Errorf(event, args...)
 	os.Exit(1)
 }
 
 // Critical shortcut for log function
-func (l *Log) Critical(args ...interface{}) {
+func (l *Log) Critical(event string, args ...interface{}) {
 	message := fmt.Sprint(args...)
-	l.Criticalf(message)
+	l.Criticalf(event, message)
 }
 
 // Criticalf shortcut for log function
-func (l *Log) Criticalf(message string, args ...interface{}) {
-	logIt("CRITICAL", message, args...)
+func (l *Log) Criticalf(event string, args ...interface{}) {
+	logWriter("CRITICAL", l.prepareLog(event, args...))
 
 	// Hokey way to test the critical path
 	if CriticalExit {
@@ -128,20 +126,36 @@ func (l *Log) Criticalf(message string, args ...interface{}) {
 	}
 }
 
-func (l *Log) prepareLog(event string) string {
+func (l *Log) prepareLog(event string, args ...interface{}) string {
+	var message string
+	if len(args) > 0 {
+		message = fmt.Sprint(args[0])
+		if len(args) > 1 {
+			message = fmt.Sprintf(message, args[1:len(args)]...)
+		}
+	}
+
 	logStr := fmt.Sprintf("event_id=%s ", event)
 
 	callStr, err := getCaller()
 	if err != nil {
-		fmt.Printf("error getting caller information", err)
-		callStr = 
+		fmt.Println("error getting caller information", err)
+		callStr = ""
 	}
+
+	logStr = fmt.Sprintf("%s%s", callStr, logStr)
 
 	for key, val := range l.meta {
 		strVal := fmt.Sprintf("%v", val)
 		strVal = strings.ReplaceAll(strVal, `"`, "\\\"") // escape double quotes inside strings
-		logStr += fmt.Sprintf("%s=\"%s\" ", key, strVal)
+		logStr += fmt.Sprintf("%s=%q ", key, strVal)
 	}
+	l.meta = make(map[string]interface{})
+
+	if len(message) > 0 {
+		logStr = fmt.Sprintf("%s%s", logStr, message)
+	}
+
 	return logStr
 }
 
@@ -160,7 +174,7 @@ func logWriter(loglevel, message string) {
 	}
 }
 
-func getCaller() (*string, error) {
+func getCaller() (string, error) {
 	var callStr string
 	pc := make([]uintptr, 4)
 	numCallers := runtime.Callers(1, pc)
@@ -170,15 +184,15 @@ func getCaller() (*string, error) {
 		for {
 			frame, more := frames.Next()
 			if !more {
-				return nil, errors.New("digilog: no caller found outside of digilog")
+				return "", errors.New("digilog: no caller found outside of digilog")
 			}
 			if !strings.Contains(frame.File, "digilog.go") {
 				_, fname := path.Split(frame.File)
 				callStr = fmt.Sprintf("%s:%d", fname, frame.Line)
-				return &callStr, nil
+				return callStr, nil
 			}
 		}
 	}
 
-	return nil, errors.New("digilog: caller not found")
+	return "", errors.New("digilog: caller not found")
 }
