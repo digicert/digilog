@@ -17,9 +17,6 @@ var LogLevel string
 // CriticalExit makes Critical funcs exit when calling
 var CriticalExit bool
 
-// Out prints the data to os.Stdout/os.StdErr
-var Out *BuffOut
-
 // BuffOut provides writers to handle output and err output
 type BuffOut struct {
 	Out io.Writer
@@ -33,8 +30,6 @@ func init() {
 	}
 
 	CriticalExit = true
-
-	Out = &BuffOut{Out: os.Stdout, Err: os.Stderr}
 }
 
 // New is used to initialize a new Log
