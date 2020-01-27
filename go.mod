@@ -1,4 +1,4 @@
-module github.com/digicert/digilog
+module github.com/digicert/digilog/v2
 
 require (
 	github.com/google/uuid v1.1.1
