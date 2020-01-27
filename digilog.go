@@ -29,7 +29,7 @@ type BuffOut struct {
 func init() {
 	LogLevel = os.Getenv("LOG_LEVEL")
 	if LogLevel == "" {
-		LogLevel = "DEBUG"
+		LogLevel = "INFO"
 	}
 
 	CriticalExit = true

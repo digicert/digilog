@@ -1,24 +1,22 @@
-DIGILOG
+digilog
 ========
 
 Small wrapper around the built in Go "fmt" class to add logging levels.
-
 
 ## Import
 
 ### go.mod
 ```
-require github.com/digicert/digilog v1.3.0 (<= whatever version here)
+go get -u github.com/digicert/digilog
 ```
 
 ### go src
 import "github.com/digicert/digilog"
 
 
-
 ## Usage
 
-Setting the environment variable `LOG_LEVEL` will determine what level is written to the log. In your source code, you can use any of the following log levels: `DEBUG`, `INFO`, `WARN`, `ERROR`, `CRITICAL`.
+Setting the environment variable `LOG_LEVEL` will determine what level is written to the log. In your source code, you can use any of the following log levels: `DEBUG`, `INFO`, `WARN`, `ERROR`, `CRITICAL`. The default logging level is `INFO`.
 
 By default, digilog writes logs to both `stdout` and `stderr`. This can be overridden by creating a BuffOut struct where Out and Err are set to `io.Writer` instances where the logs should be written.
 
@@ -27,7 +25,7 @@ In your own application, logs can be written as such:
 ```
 log := digilog.New()
 log.Info("my_event_name", "othervar=123", "yetothervar=234")
-log.Infof("event_id=my_event_name", "othervar=123", "yetothervar=234")
+log.Infof("event_id=my_event_name %s %s", "othervar=123", "yetothervar=234")
 ```
 
 To override the writer:
