@@ -17,9 +17,6 @@ var LogLevel string
 // CriticalExit makes Critical funcs exit when calling
 var CriticalExit bool
 
-// Out prints the data to os.Stdout/os.StdErr
-var Out *BuffOut
-
 // BuffOut provides writers to handle output and err output
 type BuffOut struct {
 	Out io.Writer
@@ -29,12 +26,10 @@ type BuffOut struct {
 func init() {
 	LogLevel = os.Getenv("LOG_LEVEL")
 	if LogLevel == "" {
-		LogLevel = "DEBUG"
+		LogLevel = "INFO"
 	}
 
 	CriticalExit = true
-
-	Out = &BuffOut{Out: os.Stdout, Err: os.Stderr}
 }
 
 // New is used to initialize a new Log
@@ -42,12 +37,24 @@ func New() *Log {
 
 	return &Log{
 		meta: make(map[string]interface{}),
+		out:  &BuffOut{Out: os.Stdout, Err: os.Stderr},
 	}
 }
 
 // Log contains loggers for info and error logging as well as the data to be printed in said logs
 type Log struct {
 	meta map[string]interface{}
+	out  *BuffOut
+}
+
+// SetOutput changes the output buffer per log
+func (l *Log) SetOutput(o *BuffOut) {
+	l.out = o
+}
+
+// Out return the writer for the Output buffer in the log
+func (l *Log) Out() io.Writer {
+	return l.out.Out
 }
 
 // AddTag adds metadata to a Log
@@ -68,7 +75,7 @@ func (l *Log) Debug(event string, args ...interface{}) {
 
 // Debugf shortcut for log function
 func (l *Log) Debugf(event string, args ...interface{}) {
-	logWriter("DEBUG", l.prepareLog(event, args...))
+	l.logWriter("DEBUG", l.prepareLog(event, args...))
 }
 
 // Info shortcut for log function
@@ -79,7 +86,7 @@ func (l *Log) Info(event string, args ...interface{}) {
 
 // Infof shortcut for log function
 func (l *Log) Infof(event string, args ...interface{}) {
-	logWriter("INFO", l.prepareLog(event, args...))
+	l.logWriter("INFO", l.prepareLog(event, args...))
 }
 
 // Warn shortcut for log function
@@ -90,7 +97,7 @@ func (l *Log) Warn(event string, args ...interface{}) {
 
 // Warnf shortcut for log function
 func (l *Log) Warnf(event string, args ...interface{}) {
-	logWriter("WARN", l.prepareLog(event, args...))
+	l.logWriter("WARN", l.prepareLog(event, args...))
 }
 
 // Error shortcut for log function
@@ -101,7 +108,7 @@ func (l *Log) Error(event string, args ...interface{}) {
 
 // Errorf shortcut for log function
 func (l *Log) Errorf(event string, args ...interface{}) {
-	logWriter("ERROR", l.prepareLog(event, args...))
+	l.logWriter("ERROR", l.prepareLog(event, args...))
 }
 
 // Fatal is equivalent to calling Error(), then os.Exit(1)
@@ -118,7 +125,7 @@ func (l *Log) Critical(event string, args ...interface{}) {
 
 // Criticalf shortcut for log function
 func (l *Log) Criticalf(event string, args ...interface{}) {
-	logWriter("CRITICAL", l.prepareLog(event, args...))
+	l.logWriter("CRITICAL", l.prepareLog(event, args...))
 
 	// Hokey way to test the critical path
 	if CriticalExit {
@@ -159,7 +166,7 @@ func (l *Log) prepareLog(event string, args ...interface{}) string {
 	return logStr
 }
 
-func logWriter(loglevel, message string) {
+func (l *Log) logWriter(loglevel, message string) {
 	LogLevelVal := map[string]int{
 		"DEBUG":    4,
 		"INFO":     3,
@@ -170,7 +177,7 @@ func logWriter(loglevel, message string) {
 
 	if LogLevelVal[loglevel] <= LogLevelVal[LogLevel] {
 		time := time.Now().Format(time.RFC3339)
-		fmt.Fprintf(Out.Out, "%s [%s] %s\n", time, loglevel, message)
+		fmt.Fprintf(l.Out(), "%s [%s] %s\n", time, loglevel, message)
 	}
 }
 

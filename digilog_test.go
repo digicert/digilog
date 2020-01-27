@@ -23,6 +23,7 @@ func TestDebug(t *testing.T) {
 
 	LogLevel = "DEBUG"
 	l := New()
+	l.SetOutput(Out)
 	l.Debug("test_event", "salutation='", "hello world", "'")
 	assert.True(strings.Contains(testBuff.String(), "DEBUG"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello world'\n"), "failed asserting that %s ends with %s", testBuff.String(), "event_id=test_event salutation='hello world'\n")
@@ -33,6 +34,7 @@ func TestDebugf(t *testing.T) {
 
 	LogLevel = "DEBUG"
 	l := New()
+	l.SetOutput(Out)
 	l.Debugf("test_event", "salutation='%s'", "hello world")
 	assert.True(strings.Contains(testBuff.String(), "DEBUG"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello world'\n"))
@@ -44,6 +46,7 @@ func TestInfo(t *testing.T) {
 
 	LogLevel = "INFO"
 	l := New()
+	l.SetOutput(Out)
 	l.Info("test_event", "salutation='", "hello mother", "'")
 	assert.True(strings.Contains(testBuff.String(), "INFO"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello mother'\n"))
@@ -55,6 +58,7 @@ func TestInfoAddTag(t *testing.T) {
 
 	LogLevel = "INFO"
 	l := New()
+	l.SetOutput(Out)
 	l.AddTag("foo", "bar")
 	l.Info("test_event", "salutation='", "hello mother", "'")
 	assert.True(strings.Contains(testBuff.String(), "INFO"))
@@ -67,6 +71,7 @@ func TestInfof(t *testing.T) {
 
 	LogLevel = "INFO"
 	l := New()
+	l.SetOutput(Out)
 	l.Infof("test_event", "salutation='%s'", "hello mother")
 	assert.True(strings.Contains(testBuff.String(), "INFO"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello mother'\n"))
@@ -78,6 +83,7 @@ func TestWarn(t *testing.T) {
 
 	LogLevel = "WARN"
 	l := New()
+	l.SetOutput(Out)
 	l.Warn("test_event", "salutation='", "hello father", "'")
 	assert.True(strings.Contains(testBuff.String(), "WARN"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello father'\n"))
@@ -89,6 +95,7 @@ func TestWarnf(t *testing.T) {
 
 	LogLevel = "WARN"
 	l := New()
+	l.SetOutput(Out)
 	l.Warnf("test_event", "salutation='%s'", "hello father")
 	assert.True(strings.Contains(testBuff.String(), "WARN"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello father'\n"))
@@ -100,6 +107,7 @@ func TestError(t *testing.T) {
 
 	LogLevel = "ERROR"
 	l := New()
+	l.SetOutput(Out)
 	l.Error("test_event", "salutation='", "hello sister", "'")
 	assert.True(strings.Contains(testBuff.String(), "ERROR"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello sister'\n"))
@@ -111,6 +119,7 @@ func TestErrorf(t *testing.T) {
 
 	LogLevel = "ERROR"
 	l := New()
+	l.SetOutput(Out)
 	l.Errorf("test_event", "salutation='%s'", "hello sister")
 	assert.True(strings.Contains(testBuff.String(), "ERROR"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello sister'\n"))
@@ -122,6 +131,7 @@ func TestCritical(t *testing.T) {
 
 	LogLevel = "CRITICAL"
 	l := New()
+	l.SetOutput(Out)
 	l.Critical("test_event", fmt.Errorf("salutation='%s'", "hello brother"))
 	assert.True(strings.Contains(testBuff.String(), "CRITICAL"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello brother'\n"))
@@ -133,6 +143,7 @@ func TestCriticalf(t *testing.T) {
 
 	LogLevel = "CRITICAL"
 	l := New()
+	l.SetOutput(Out)
 	l.Criticalf("test_event", "salutation='%s'", "hello brother")
 	assert.True(strings.Contains(testBuff.String(), "CRITICAL"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello brother'\n"))
@@ -145,6 +156,7 @@ func TestLogLevel(t *testing.T) {
 	LogLevel = "INFO"
 	testBuff = &bytes.Buffer{}
 	l := New()
+	l.SetOutput(Out)
 	l.Debugf("test_event", "salutation='%s'", "hello empty void")
 	assert.Empty(testBuff.String())
 }
