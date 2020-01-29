@@ -10,6 +10,7 @@ import (
 )
 
 var testBuff *bytes.Buffer
+var Out *BuffOut
 
 func init() {
 	testBuff = &bytes.Buffer{}
@@ -28,6 +29,76 @@ func TestDebug(t *testing.T) {
 	assert.True(strings.Contains(testBuff.String(), "DEBUG"))
 	assert.True(strings.HasSuffix(testBuff.String(), "event_id=test_event salutation='hello world'\n"), "failed asserting that %s ends with %s", testBuff.String(), "event_id=test_event salutation='hello world'\n")
 }
+
+func TestDebug_AddTagStructAndMap(t *testing.T) {
+	type TestStruct struct {
+		One   string
+		Two   int
+		Three bool
+	}
+
+	s := TestStruct{
+		One:   "one",
+		Two:   2,
+		Three: true,
+	}
+
+	m := map[string]interface{}{
+		"Four": "Four",
+		"Five": 5,
+		"Six":  false,
+	}
+	testBuff.Reset()
+	assert := assert.New(t)
+
+	LogLevel = "DEBUG"
+	l := New()
+	l.SetOutput(Out)
+	l.AddTag("test_struct", s)
+	l.AddTag("test_map", m)
+	l.AddMeta("meta_string", "salutations")
+	l.AddMeta("meta_bool", true)
+
+	// Test that Tags and Meta are added in an expected format
+	l.Debug("test_event", "salutation='", "hello world", "'")
+	assert.True(strings.Contains(testBuff.String(), "DEBUG"))
+	e := "event_id=test_event test_struct=\"{One:one Two:2 Three:true}\" test_map=\"map[Five:5 Four:Four Six:false]\" meta_string=\"salutations\" meta_bool=\"true\" salutation='hello world'\n"
+	assert.True(strings.HasSuffix(testBuff.String(), e), "failed asserting that %s ends with %s", testBuff.String(), e)
+
+	// Test that meta is removed after the log is written
+	testBuff.Reset()
+	l.Debug("test_event", "salutation='", "hello world", "'")
+	e = "event_id=test_event test_struct=\"{One:one Two:2 Three:true}\" test_map=\"map[Five:5 Four:Four Six:false]\" salutation='hello world'\n"
+	assert.True(strings.HasSuffix(testBuff.String(), e), "failed asserting that %s ends with %s", testBuff.String(), e)
+}
+
+func TestDebug_AddTagsMetas(t *testing.T) {
+	testBuff.Reset()
+	assert := assert.New(t)
+
+	LogLevel = "DEBUG"
+	l := New()
+	l.SetOutput(Out)
+
+	l.AddTags(map[string]interface{}{
+		"salutation": "hello world",
+	})
+	l.AddMetas(map[string]interface{}{
+		"next_salutation": "goodbye world",
+	})
+
+	l.Debug("test_event")
+	assert.True(strings.Contains(testBuff.String(), "DEBUG"))
+	e := "event_id=test_event salutation=\"hello world\" next_salutation=\"goodbye world\" \n"
+	assert.True(strings.HasSuffix(testBuff.String(), e), "failed asserting that %s ends with %s", testBuff.String(), e)
+
+	testBuff.Reset()
+	l.Debug("test_event")
+	assert.True(strings.Contains(testBuff.String(), "DEBUG"))
+	e = "event_id=test_event salutation=\"hello world\" \n"
+	assert.True(strings.HasSuffix(testBuff.String(), e), "failed asserting that %s ends with %s", testBuff.String(), e)
+}
+
 func TestDebugf(t *testing.T) {
 	testBuff.Reset()
 	assert := assert.New(t)

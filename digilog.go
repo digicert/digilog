@@ -36,15 +36,19 @@ func init() {
 func New() *Log {
 
 	return &Log{
-		meta: make(map[string]interface{}),
-		out:  &BuffOut{Out: os.Stdout, Err: os.Stderr},
+		tags:   make(map[string]interface{}),
+		meta:   make(map[string]interface{}),
+		out:    &BuffOut{Out: os.Stdout, Err: os.Stderr},
+		caller: false,
 	}
 }
 
 // Log contains loggers for info and error logging as well as the data to be printed in said logs
 type Log struct {
-	meta map[string]interface{}
-	out  *BuffOut
+	tags   map[string]interface{}
+	meta   map[string]interface{}
+	out    *BuffOut
+	caller bool
 }
 
 // SetOutput changes the output buffer per log
@@ -52,14 +56,38 @@ func (l *Log) SetOutput(o *BuffOut) {
 	l.out = o
 }
 
+// LogCaller logs the calling location (file and line)
+func (l *Log) LogCaller() {
+	l.caller = true
+}
+
 // Out return the writer for the Output buffer in the log
 func (l *Log) Out() io.Writer {
 	return l.out.Out
 }
 
-// AddTag adds metadata to a Log
+// AddTag adds permanent tags for each log entry
 func (l *Log) AddTag(key string, v interface{}) {
+	l.tags[key] = v
+}
+
+// AddTags appends a slice of permanent tags for each log entry
+func (l *Log) AddTags(m map[string]interface{}) {
+	for k, v := range m {
+		l.tags[k] = v
+	}
+}
+
+// AddMeta adds temporary metadata for the next log entry
+func (l *Log) AddMeta(key string, v interface{}) {
 	l.meta[key] = v
+}
+
+// AddMetas appends a slice of temporary metadata for the next log entry
+func (l *Log) AddMetas(m map[string]interface{}) {
+	for k, v := range m {
+		l.meta[k] = v
+	}
 }
 
 // AddDuration adds time.Duration to the log metadata
@@ -144,16 +172,25 @@ func (l *Log) prepareLog(event string, args ...interface{}) string {
 
 	logStr := fmt.Sprintf("event_id=%s ", event)
 
-	callStr, err := getCaller()
-	if err != nil {
-		fmt.Println("error getting caller information", err)
-		callStr = ""
+	callStr := ""
+	var err error
+	if l.caller {
+		callStr, err = getCaller()
+		if err != nil {
+			callStr = ""
+		}
 	}
 
 	logStr = fmt.Sprintf("%s%s", callStr, logStr)
 
+	for key, val := range l.tags {
+		strVal := fmt.Sprintf("%+v", val)
+		strVal = strings.ReplaceAll(strVal, `"`, "\\\"") // escape double quotes inside strings
+		logStr += fmt.Sprintf("%s=%q ", key, strVal)
+	}
+
 	for key, val := range l.meta {
-		strVal := fmt.Sprintf("%v", val)
+		strVal := fmt.Sprintf("%+v", val)
 		strVal = strings.ReplaceAll(strVal, `"`, "\\\"") // escape double quotes inside strings
 		logStr += fmt.Sprintf("%s=%q ", key, strVal)
 	}
