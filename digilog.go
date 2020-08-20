@@ -51,6 +51,7 @@ type Log struct {
 	caller bool
 }
 
+// WithTransactionID adds a "transaction_id" tag to the Log
 func (l *Log) WithTransactionID(id string) *Log {
 	l.AddTag("transaction_id", id)
 	return l
