@@ -130,6 +130,13 @@ func (l *Log) Warnf(event string, args ...interface{}) {
 
 // Error shortcut for log function
 func (l *Log) Error(event string, args ...interface{}) {
+	if len(args) == 1 {
+		val, ok := args[0].(error)
+		if ok {
+			l.Errorf(event, "error=%q", val)
+			return
+		}
+	}
 	message := fmt.Sprint(args...)
 	l.Errorf(event, message)
 }
