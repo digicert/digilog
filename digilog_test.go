@@ -231,3 +231,15 @@ func TestLogLevel(t *testing.T) {
 	l.Debugf("test_event", "salutation='%s'", "hello empty void")
 	assert.Empty(testBuff.String())
 }
+
+func TestLog_WithTransactionID(t *testing.T) {
+	testBuff.Reset()
+	assert := assert.New(t)
+
+	LogLevel = "INFO"
+	transactionID := "veryUniqueTransactionID"
+	l := New().WithTransactionID(transactionID)
+	l.SetOutput(Out)
+	l.Info("test_event")
+	assert.True(strings.Contains(testBuff.String(), transactionID))
+}
