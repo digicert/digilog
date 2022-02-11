@@ -51,6 +51,12 @@ type Log struct {
 	caller bool
 }
 
+// WithTransactionID adds a "transaction_id" tag to the Log
+func (l *Log) WithTransactionID(id string) *Log {
+	l.AddTag("transaction_id", id)
+	return l
+}
+
 // SetOutput changes the output buffer per log
 func (l *Log) SetOutput(o *BuffOut) {
 	l.out = o
